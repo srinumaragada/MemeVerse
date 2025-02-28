@@ -282,31 +282,34 @@ export const unlikeMeme = async (id: string): Promise<Meme> => {
 };
 
 
-export const addComment = async (memeId: string, text: string, author: string): Promise<Comment> => {
+export const addComment = async (memeId: string, text: string): Promise<Comment> => {
   const memes: Meme[] = JSON.parse(localStorage.getItem('memes') || '[]');
   const index = memes.findIndex(m => m.id === memeId);
-  
+
   if (index === -1) {
     throw new Error('Meme not found');
   }
-  
+
   const newComment: Comment = {
-    id: `comment-${Date.now()}`,
+    id: `comment-${Date.now()}`, 
     text,
-    author,
-    created_at: new Date().toISOString()
+    author: 'User',
+    created_at: new Date().toISOString(), 
   };
+
   
   memes[index].comments.push(newComment);
-  localStorage.setItem('memes', JSON.stringify(memes));
-  
 
+  
+  localStorage.setItem('memes', JSON.stringify(memes));
+
+  // Invalidate cache for the affected meme
   Object.keys(apiCache).forEach(key => {
     if (key.startsWith('memes-') || key === `meme-${memeId}`) {
       delete apiCache[key];
     }
   });
-  
+
   return newComment;
 };
 

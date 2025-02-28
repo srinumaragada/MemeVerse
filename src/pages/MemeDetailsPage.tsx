@@ -5,7 +5,6 @@ import { Heart, MessageCircle, Share2, ArrowLeft, Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useAppDispatch, useAppSelector } from '../hooks/useRedux';
 import { fetchMemeById, likeMeme, addComment } from '../store/memeSlice';
-import { addLikedMeme } from '../store/userSlice';
 import { Comment } from '../types';
 
 const MemeDetailsPage: React.FC = () => {
@@ -14,27 +13,25 @@ const MemeDetailsPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { currentMeme, loading, error } = useAppSelector(state => state.memes);
   const { darkMode } = useAppSelector(state => state.ui);
-  const { currentUser } = useAppSelector(state => state.user);
   const [commentText, setCommentText] = useState('');
-  
+
   useEffect(() => {
     if (id) {
       dispatch(fetchMemeById(id));
     }
   }, [dispatch, id]);
+
+  const handleSubmitComment = (e: React.FormEvent) => {
+    e.preventDefault();
   
-  const isLiked = currentUser?.likedMemes.includes(id || '') || false;
-  
-  const handleLike = () => {
-    if (!isLiked && id) {
-      dispatch(likeMeme(id));
-      dispatch(addLikedMeme(id));
+    if (commentText.trim() && id) {
+      dispatch(addComment({
+        memeId: id,
+        text: commentText,
+      }));
+      setCommentText('');
     }
-  
-    
   };
-  
-  
 
   const handleShare = () => {
     if (navigator.share) {
@@ -49,19 +46,6 @@ const MemeDetailsPage: React.FC = () => {
     }
   };
   
-  const handleSubmitComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (commentText.trim() && id && currentUser) {
-      dispatch(addComment({
-        memeId: id,
-        text: commentText,
-        author: currentUser.name
-      }));
-      setCommentText('');
-    }
-  };
-  
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -69,7 +53,7 @@ const MemeDetailsPage: React.FC = () => {
       </div>
     );
   }
-  
+
   if (error || !currentMeme) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
@@ -86,7 +70,7 @@ const MemeDetailsPage: React.FC = () => {
       </div>
     );
   }
-  
+
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
       <div className="container mx-auto px-4 py-8">
@@ -99,7 +83,7 @@ const MemeDetailsPage: React.FC = () => {
           <ArrowLeft size={20} className="mr-2" />
           Back
         </button>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Meme Image */}
           <div className="lg:col-span-2">
@@ -118,10 +102,10 @@ const MemeDetailsPage: React.FC = () => {
                   className="w-full h-auto"
                 />
               </div>
-              
+
               <div className="p-6">
                 <h1 className="text-2xl font-bold mb-4">{currentMeme.title}</h1>
-                
+
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-6">
                   <span>By {currentMeme.author}</span>
                   <span className="mx-2">•</span>
@@ -137,26 +121,22 @@ const MemeDetailsPage: React.FC = () => {
                     </>
                   )}
                 </div>
-                
+
                 <div className="flex items-center space-x-6">
                   <button
-                    onClick={handleLike}
-                    className={`flex items-center space-x-2 ${
-                      isLiked ? 'text-pink-500' : 'text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-500'
-                    } transition-colors`}
-                    disabled={isLiked}
+                    onClick={() => dispatch(likeMeme(currentMeme.id))}
+                    className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-500 transition-colors"
                   >
-                    <Heart size={24} fill={isLiked ? 'currentColor' : 'none'} />
+                    <Heart size={24} />
                     <span className="font-medium">{currentMeme.likes}</span>
                   </button>
-                  
+
                   <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
                     <MessageCircle size={24} />
                     <span className="font-medium">{currentMeme.comments.length}</span>
                   </div>
-                  
+
                   <button
-                  title="button"
                     onClick={handleShare}
                     className="text-gray-500 dark:text-gray-400 hover:text-purple-500 dark:hover:text-purple-500 transition-colors"
                   >
@@ -166,7 +146,7 @@ const MemeDetailsPage: React.FC = () => {
               </div>
             </motion.div>
           </div>
-          
+
           {/* Comments Section */}
           <div className="lg:col-span-1">
             <motion.div
@@ -178,14 +158,14 @@ const MemeDetailsPage: React.FC = () => {
               } p-6`}
             >
               <h2 className="text-xl font-bold mb-6">Comments ({currentMeme.comments.length})</h2>
-              
+
               {/* Comment Form */}
               <form onSubmit={handleSubmitComment} className="mb-8">
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full overflow-hidden">
                     <img
-                      src={currentUser?.profilePicture || "https://source.unsplash.com/random/100x100/?avatar"}
-                      alt="Your avatar"
+                      src="https://source.unsplash.com/random/100x100/?avatar"
+                      alt="Anonymous avatar"
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -216,7 +196,7 @@ const MemeDetailsPage: React.FC = () => {
                   </div>
                 </div>
               </form>
-              
+
               {/* Comments List */}
               <div className="space-y-6">
                 {currentMeme.comments.length === 0 ? (

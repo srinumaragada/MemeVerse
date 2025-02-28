@@ -117,12 +117,12 @@ export const unlikeMeme = createAsyncThunk(
   }
 );
 
-// Add comment
+// memeSlice.ts
 export const addComment = createAsyncThunk(
   'memes/addComment',
-  async ({ memeId, text, author }: { memeId: string; text: string; author: string }, { rejectWithValue }) => {
+  async ({ memeId, text }: { memeId: string; text: string }, { rejectWithValue }) => {
     try {
-      const newComment = await api.addComment(memeId, text, author);
+      const newComment = await api.addComment(memeId, text);
       return { memeId, comment: newComment };
     } catch (error) {
       return rejectWithValue('Failed to add comment');
@@ -229,15 +229,23 @@ const memeSlice = createSlice({
           state.currentMeme = action.payload;
         }
       })
-      .addCase(addComment.fulfilled, (state, action) => {
-        const { memeId, comment } = action.payload;
-        const index = state.memes.findIndex(meme => meme.id === memeId);
-        if (index !== -1) {
-          state.memes[index].comments.push(comment);
-        }
-        if (state.currentMeme?.id === memeId) {
-          state.currentMeme.comments.push(comment);
-        }
+      // memeSlice.ts
+.addCase(addComment.fulfilled, (state, action) => {
+  const { memeId, comment } = action.payload;
+
+  // Update currentMeme if it matches the memeId
+  if (state.currentMeme?.id === memeId) {
+    state.currentMeme.comments.push(comment);
+  }
+
+  // Update the memes array if it contains the meme
+  const memeIndex = state.memes.findIndex(meme => meme.id === memeId);
+  if (memeIndex !== -1) {
+    state.memes[memeIndex].comments.push(comment);
+  }
+})
+      .addCase(addComment.rejected, (state, action) => {
+        state.error = action.payload as string;
       });
   },
 });
