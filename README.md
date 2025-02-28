@@ -4,7 +4,7 @@
 MemeVerse is a multi-page, highly interactive website where users can explore, upload, and interact with memes. This project demonstrates frontend development skills, including UI/UX, animations, state management, performance optimization, API handling, and advanced React techniques.
 
 ## 🚀 Live Demo
-[Click here to view the live demo](#)(https://memeversewebsite.netlify.app/)
+🔗 [MemeVerse Live Demo](https://memeversewebsite.netlify.app/)
 
 ---
 
